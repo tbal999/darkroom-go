@@ -9,7 +9,7 @@ import (
 )
 
 func generateNest(x, cmd int, diff *int) []int {
-	diffy := *diff
+	//diffy := *diff
 	xindex := 0
 	nest := make([]int, 0)
 	for xindex = 0; xindex < x; xindex++ {
@@ -18,14 +18,14 @@ func generateNest(x, cmd int, diff *int) []int {
 	switch cmd {
 	case 1:
 		for xindex = 0; xindex < x-1; xindex++ {
-			nest[randomNumber(0, x)] = randomNumber(0, diffy)
+			nest[randomNumber(0, x)] = randomNumber(3, 9)
 		}
 	}
 	return nest
 }
 
 func generateSlice(x, y, cmd int, diffy *int) [][]int {
-	thedifficulty := *diffy
+	//thedifficulty := *diffy
 	yindex := 0
 	slice := make([][]int, 0, 0)
 	for yindex = 0; yindex < y; yindex++ {
@@ -35,9 +35,13 @@ func generateSlice(x, y, cmd int, diffy *int) [][]int {
 	case 0:
 		slice[0][0] = 2
 	case 1:
-		slice[randomNumber(0, len(slice)-1)][randomNumber(0, len(slice[0])-1)] = 99
-		slice[randomNumber(0, len(slice)-1)][randomNumber(0, len(slice[0])-1)] = 6 + thedifficulty
-		slice[0][0] = 2
+		for yindex = 0; yindex < y; yindex++ {
+			slice[randomNumber(0, len(slice)-1)][randomNumber(0, len(slice[0])-1)] = randomNumber(3, 9)
+		}
+		for yindex = 0; yindex < y; yindex++ {
+			slice[randomNumber(0, len(slice)-1)][randomNumber(0, len(slice[0])-1)] = randomNumber(10, 16)
+		}
+		slice[0][0] = 0
 	}
 	return slice
 }
@@ -68,17 +72,19 @@ func resetSlice(a, b int, diff *int, zeros, ones *[][]int) {
 	*ones = j
 }
 
-func checkMapClear(a, b int, diff *int, zeros, ones *[][]int, h *Hero) {
+func checkMapClear(a, b int, diff *int, zeros, ones *[][]int, he *Hero) {
 	o := *ones
 	for iy := range o {
 		for ix := range o[iy] {
-			if o[iy][ix] >= 5 {
+			if o[iy][ix] >= 6 {
 				return
 			}
 		}
 	}
-	fmt.Println("The map is clear of monsters!")
-	fmt.Println("Moving to new Map!")
+	//difficult := *diff
+	//h := *he
+	fmt.Println("The dungeon is clear of monsters!")
+	fmt.Println("Moving to new Dungeon!")
 	resetSlice(a, b, diff, zeros, ones)
 }
 
@@ -88,62 +94,73 @@ func checknumber(y, x int, game [][]int, he *Hero, diff int) {
 	switch number {
 	case 0:
 		fmt.Println("You found nothing here.")
-	case 1:
+	case 3:
+		printSlice(game)
+		fmt.Println("You found a map of the dungeon! What does it all mean?")
+		fmt.Println("The map states numbers below 10 are good, and above 10 are bad...")
+	case 4:
 		fmt.Println("You have found a Dagger!")
 		i := *h.attack
 		i = i + 1
 		*h.attack = i
-	case 3:
+	case 5:
 		fmt.Println("You have found a Axe!")
+		i := *h.attack
+		i = i + 2
+		*h.attack = i
+	case 6:
+		fmt.Println("You have found a Sword!")
 		i := *h.attack
 		i = i + 3
 		*h.attack = i
-	case 4:
-		fmt.Println("You have found a Sword!")
-		i := *h.attack
-		i = i + 5
-		*h.attack = i
-	case 5:
+	case 7:
 		fmt.Println("You have found Excalibur!")
 		i := *h.attack
-		i = i + 8
+		i = i + 4
 		*h.attack = i
-	case 6:
+	case 8:
+		fmt.Println("You have found some rejuvinating water!")
+		fmt.Println("You have gained " + strconv.Itoa(diff) + " health.")
+		i2 := *h.health
+		i2 = i2 + diff
+		*h.health = i2
+	case 10:
 		fmt.Println("You have encountered a small toad.")
 		initiateFight(he, 6, diff)
-	case 7:
+	case 11:
 		fmt.Println("You have encountered a goblin.")
 		initiateFight(he, 7, diff)
-	case 8:
+	case 12:
 		fmt.Println("A giant moth descends from the ceiling.")
 		initiateFight(he, 8, diff)
-	case 9:
+	case 13:
 		fmt.Println("The ghost of bad luck spooks you.")
+		fmt.Println("You've dropped all your weapons and now have 1 attack")
+		i3 := *h.attack
+		i3 = 1
+		*h.attack = i3
 		initiateFight(he, 9, diff)
-	case 10:
+	case 14:
 		fmt.Println("A shadow beast approaches.")
 		initiateFight(he, 10, diff)
-	case 11:
+	case 15:
 		fmt.Println("A hooded rogue has been waiting...")
 		initiateFight(he, 11, diff)
-	case 12:
+	case 16:
 		fmt.Println("A demon appears!")
 		initiateFight(he, 11, diff)
-	case 99:
-		printSlice(game)
-		fmt.Println("You found a map! What does it all mean?")
 	}
 	game[y][x] = 0
 	*he = h
 }
 
 func initiateFight(h *Hero, i, difficulty int) {
-	toad := Monster{"toad", 20, 1}
-	goblin := Monster{"goblin", 15, 2}
-	moth := Monster{"giant moth", 30, 3}
-	shadowbeast := Monster{"shadow beast", 30, 5}
-	rogue := Monster{"hooded rogue", 35, 6}
-	demon := Monster{"demon", 40, 6}
+	toad := Monster{"toad", 20, 3}
+	goblin := Monster{"goblin", 15, 5}
+	moth := Monster{"giant moth", 30, 7}
+	shadowbeast := Monster{"shadow beast", 30, 9}
+	rogue := Monster{"hooded rogue", 35, 11}
+	demon := Monster{"demon", 40, 13}
 	switch i {
 	case 6:
 		Fight(h, toad, difficulty)
@@ -322,25 +339,28 @@ type Monster struct {
 func main() {
 	Scanner := bufio.NewScanner(os.Stdin)
 	you := Hero{}
-	fmt.Println("Darkrooms---")
+	fmt.Println("==========================")
+	fmt.Println("== D A R K == R O O M S ==")
+	fmt.Println("==========================")
 	fmt.Println("Type in your name:")
 	Scanner.Scan()
 	you.name = Scanner.Text()
 	fmt.Println("Good luck " + you.name + "!")
-	hp := 100
+	hp := 200
 	attk := 5
 	you.health = &hp
 	you.attack = &attk
 	gameover := 0
 	difficulty := 0
-	initx := 2
-	inity := 2
-	zeroslice := generateSlice(2, 2, 0, &initx)
-	gameslice := generateSlice(2, 2, 1, &inity)
+	initx := 6
+	inity := 6
+	zeroslice := generateSlice(4, 2, 0, &initx)
+	gameslice := generateSlice(4, 2, 1, &inity)
+	fmt.Println("Type 'w' 's' 'a' 'd' to move, 'p' to view player stats, 'q' to quit the game:")
 	for gameover != 1 {
 		mapx, mapy := randomNumber(2, 5), randomNumber(2, 5)
 		checkMapClear(mapx, mapy, &difficulty, &zeroslice, &gameslice, &you)
-		fmt.Println("Difficulty:" + strconv.Itoa(difficulty))
+		fmt.Println("Difficulty is currently:" + strconv.Itoa(difficulty))
 		printSlice(zeroslice)
 		fmt.Println("")
 		fmt.Println("Type here:")
