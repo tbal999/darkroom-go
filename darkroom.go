@@ -8,7 +8,8 @@ import (
 	"strconv"
 )
 
-func generateNest(x, cmd, diff int) []int {
+func generateNest(x, cmd int, diff *int) []int {
+	diffy := *diff
 	xindex := 0
 	nest := make([]int, 0)
 	for xindex = 0; xindex < x; xindex++ {
@@ -17,22 +18,25 @@ func generateNest(x, cmd, diff int) []int {
 	switch cmd {
 	case 1:
 		for xindex = 0; xindex < x-1; xindex++ {
-			nest[randomNumber(0, x)] = randomNumber(0, 12)
+			nest[randomNumber(0, x)] = randomNumber(0, diffy)
 		}
 	}
 	return nest
 }
 
-func generateSlice(x, y, cmd, diff int) [][]int {
+func generateSlice(x, y, cmd int, diffy *int) [][]int {
+	thedifficulty := *diffy
 	yindex := 0
 	slice := make([][]int, 0, 0)
 	for yindex = 0; yindex < y; yindex++ {
-		slice = append(slice, generateNest(x, cmd, diff))
+		slice = append(slice, generateNest(x, cmd, diffy))
 	}
 	switch cmd {
 	case 0:
 		slice[0][0] = 2
 	case 1:
+		slice[randomNumber(0, len(slice)-1)][randomNumber(0, len(slice[0])-1)] = 99
+		slice[randomNumber(0, len(slice)-1)][randomNumber(0, len(slice[0])-1)] = 6 + thedifficulty
 		slice[0][0] = 2
 	}
 	return slice
@@ -52,7 +56,10 @@ func randomNumber(min, max int) int {
 	return z
 }
 
-func resetSlice(a int, b int, diff int, zeros, ones *[][]int) {
+func resetSlice(a, b int, diff *int, zeros, ones *[][]int) {
+	diffy := *diff
+	diffy = diffy + 1
+	*diff = diffy
 	i := *zeros
 	j := *ones
 	i = generateSlice(a, b, 0, diff)
@@ -61,7 +68,21 @@ func resetSlice(a int, b int, diff int, zeros, ones *[][]int) {
 	*ones = j
 }
 
-func checknumber(y, x int, game [][]int, he *Hero) {
+func checkMapClear(a, b int, diff *int, zeros, ones *[][]int, h *Hero) {
+	o := *ones
+	for iy := range o {
+		for ix := range o[iy] {
+			if o[iy][ix] >= 5 {
+				return
+			}
+		}
+	}
+	fmt.Println("The map is clear of monsters!")
+	fmt.Println("Moving to new Map!")
+	resetSlice(a, b, diff, zeros, ones)
+}
+
+func checknumber(y, x int, game [][]int, he *Hero, diff int) {
 	h := *he
 	number := game[y][x]
 	switch number {
@@ -89,31 +110,34 @@ func checknumber(y, x int, game [][]int, he *Hero) {
 		*h.attack = i
 	case 6:
 		fmt.Println("You have encountered a small toad.")
-		initiateFight(he, 6)
+		initiateFight(he, 6, diff)
 	case 7:
 		fmt.Println("You have encountered a goblin.")
-		initiateFight(he, 7)
+		initiateFight(he, 7, diff)
 	case 8:
 		fmt.Println("A giant moth descends from the ceiling.")
-		initiateFight(he, 8)
+		initiateFight(he, 8, diff)
 	case 9:
 		fmt.Println("The ghost of bad luck spooks you.")
-		initiateFight(he, 9)
+		initiateFight(he, 9, diff)
 	case 10:
 		fmt.Println("A shadow beast approaches.")
-		initiateFight(he, 10)
+		initiateFight(he, 10, diff)
 	case 11:
 		fmt.Println("A hooded rogue has been waiting...")
-		initiateFight(he, 11)
+		initiateFight(he, 11, diff)
 	case 12:
 		fmt.Println("A demon appears!")
-		initiateFight(he, 11)
+		initiateFight(he, 11, diff)
+	case 99:
+		printSlice(game)
+		fmt.Println("You found a map! What does it all mean?")
 	}
 	game[y][x] = 0
 	*he = h
 }
 
-func initiateFight(h *Hero, i int) {
+func initiateFight(h *Hero, i, difficulty int) {
 	toad := Monster{"toad", 20, 1}
 	goblin := Monster{"goblin", 15, 2}
 	moth := Monster{"giant moth", 30, 3}
@@ -122,32 +146,34 @@ func initiateFight(h *Hero, i int) {
 	demon := Monster{"demon", 40, 6}
 	switch i {
 	case 6:
-		Fight(h, toad)
+		Fight(h, toad, difficulty)
 	case 7:
-		Fight(h, goblin)
+		Fight(h, goblin, difficulty)
 	case 8:
-		Fight(h, moth)
+		Fight(h, moth, difficulty)
 	case 10:
-		Fight(h, shadowbeast)
+		Fight(h, shadowbeast, difficulty)
 	case 11:
-		Fight(h, rogue)
+		Fight(h, rogue, difficulty)
 	case 12:
-		Fight(h, demon)
+		Fight(h, demon, difficulty)
 	}
 }
 
-func Fight(h *Hero, m Monster) {
+func Fight(h *Hero, m Monster, d int) {
 	herohealth := *h.health
 	heroattack := *h.attack
 	win := 0
 	for win == 0 {
 		herohealth = herohealth - m.attack
+		herohealth = herohealth - d
 		m.health = m.health - heroattack
 		if m.health <= 0 {
-			fmt.Println("You win the fight against" + m.name)
-			fmt.Println("You have" + strconv.Itoa(herohealth) + "remaining.")
+			fmt.Println("You win the fight against the " + m.name)
+			fmt.Println("You have " + strconv.Itoa(herohealth) + " health remaining.")
 			if herohealth <= 0 {
 				fmt.Println("You Died.")
+				fmt.Println("GAME OVER")
 				main()
 			}
 			*h.health = herohealth
@@ -161,7 +187,7 @@ func Fight(h *Hero, m Monster) {
 	}
 }
 
-func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in the slice around, up,down,left,right
+func Move(c *[][]int, d [][]int, s string, h *Hero, diff int) { //Moves the number 2 in the slice around, up,down,left,right
 	i := *c
 	switch s {
 	case "w":
@@ -173,14 +199,14 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a+1][b] == 2 {
 						i[a+1][b] = 0
 						i[a][b] = 2
-						checknumber(a, b, d, h)
+						checknumber(a, b, d, h, diff)
 						*c = i
 						return
 					}
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[len(i)-1][b] = 2
-						checknumber(len(i)-1, b, d, h)
+						checknumber(len(i)-1, b, d, h, diff)
 						*c = i
 						return
 					}
@@ -190,7 +216,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 				for b := range i[a] {
 					if i[a][b] == 2 {
 						i[a-1][b] = 2
-						checknumber(a-1, b, d, h)
+						checknumber(a-1, b, d, h, diff)
 						i[a][b] = 0
 						*c = i
 						return
@@ -208,7 +234,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[a+1][b] = 2
-						checknumber(a+1, b, d, h)
+						checknumber(a+1, b, d, h, diff)
 						*c = i
 						return
 					}
@@ -219,7 +245,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[0][b] = 2
-						checknumber(0, b, d, h)
+						checknumber(0, b, d, h, diff)
 						*c = i
 						return
 					}
@@ -236,7 +262,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[a][len(i[b])-1] = 2
-						checknumber(a, len(i[b])-1, d, h)
+						checknumber(a, len(i[b])-1, d, h, diff)
 						*c = i
 						return
 					}
@@ -245,7 +271,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[a][b-1] = 2
-						checknumber(a, b-1, d, h)
+						checknumber(a, b-1, d, h, diff)
 						*c = i
 						return
 					}
@@ -261,7 +287,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[a][0] = 2
-						checknumber(a, 0, d, h)
+						checknumber(a, 0, d, h, diff)
 						*c = i
 						return
 					}
@@ -270,7 +296,7 @@ func Move(c *[][]int, d [][]int, s string, h *Hero) { //Moves the number 2 in th
 					if i[a][b] == 2 {
 						i[a][b] = 0
 						i[a][b+1] = 2
-						checknumber(a, b+1, d, h)
+						checknumber(a, b+1, d, h, diff)
 						*c = i
 						return
 					}
@@ -300,22 +326,23 @@ func main() {
 	fmt.Println("Type in your name:")
 	Scanner.Scan()
 	you.name = Scanner.Text()
-	fmt.Println("Good luck" + you.name + "!")
+	fmt.Println("Good luck " + you.name + "!")
 	hp := 100
 	attk := 5
 	you.health = &hp
 	you.attack = &attk
 	gameover := 0
 	difficulty := 0
-	zeroslice := generateSlice(2, 2, 0, 1)
-	gameslice := generateSlice(2, 2, 1, 1)
+	initx := 2
+	inity := 2
+	zeroslice := generateSlice(2, 2, 0, &initx)
+	gameslice := generateSlice(2, 2, 1, &inity)
 	for gameover != 1 {
-		difficulty = difficulty + 1
 		mapx, mapy := randomNumber(2, 5), randomNumber(2, 5)
+		checkMapClear(mapx, mapy, &difficulty, &zeroslice, &gameslice, &you)
 		fmt.Println("Difficulty:" + strconv.Itoa(difficulty))
 		printSlice(zeroslice)
 		fmt.Println("")
-		printSlice(gameslice)
 		fmt.Println("Type here:")
 		Scanner.Scan()
 		result := Scanner.Text()
@@ -324,18 +351,20 @@ func main() {
 			gameover = 1
 			os.Exit(3)
 		case "n":
-			resetSlice(mapx, mapy, difficulty, &zeroslice, &gameslice)
+			resetSlice(mapx, mapy, &difficulty, &zeroslice, &gameslice)
 		case "w":
-			Move(&zeroslice, gameslice, "w", &you)
+			Move(&zeroslice, gameslice, "w", &you, difficulty)
 		case "s":
-			Move(&zeroslice, gameslice, "s", &you)
+			Move(&zeroslice, gameslice, "s", &you, difficulty)
 		case "a":
-			Move(&zeroslice, gameslice, "a", &you)
+			Move(&zeroslice, gameslice, "a", &you, difficulty)
 		case "d":
-			Move(&zeroslice, gameslice, "d", &you)
+			Move(&zeroslice, gameslice, "d", &you, difficulty)
 		case "p":
 			fmt.Println("You have " + strconv.Itoa(*you.health) + " health remaining.")
 			fmt.Println("You have " + strconv.Itoa(*you.attack) + " attack.")
+		case "ok":
+			printSlice(gameslice)
 		}
 	}
 }
