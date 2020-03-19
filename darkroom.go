@@ -84,6 +84,17 @@ func checkMapClear(a, b int, diff *int, zeros, ones *[][]int, he *Hero) {
 	//difficult := *diff
 	//h := *he
 	fmt.Println("The dungeon is clear of monsters!")
+	fmt.Println(`		
+  |                    _,.-----.,_         o    |          
+           +    *    .-'.         .'-.          -O-         
+     *            .'.-'   .---.   '.'.         |     *    
+.                /_.-'   /     \   .'-.\                   
+        ' -=*<  |-._.-  |       |   '-._|  >*=-    .     + 
+-- )--           \-.    \     /    .-'/                   
+      *     +     .'.    '---'    .'.'    +       o       
+                 .  '-._         _.-'  .                   
+         |               ~~~~~~~       - --===D       @   
+`)
 	fmt.Println("Moving to new Dungeon!")
 	resetSlice(a, b, diff, zeros, ones)
 }
@@ -339,9 +350,23 @@ type Monster struct {
 func main() {
 	Scanner := bufio.NewScanner(os.Stdin)
 	you := Hero{}
-	fmt.Println("==========================")
-	fmt.Println("== D A R K == R O O M S ==")
-	fmt.Println("==========================")
+	fmt.Println(`
+ ______   _______  ______    ___   _          
+|      | |   _   ||    _ |  |   | | |         
+|  _    ||  |_|  ||   | ||  |   |_| |         
+| | |   ||       ||   |_||_ |      _|         
+| |_|   ||       ||    __  ||     |_          
+|       ||   _   ||   |  | ||    _  |         
+|______| |__| |__||___|  |_||___| |_|         
+ ______    _______  _______  __   __  _______ 
+|    _ |  |       ||       ||  |_|  ||       |
+|   | ||  |   _   ||   _   ||       ||  _____|
+|   |_||_ |  | |  ||  | |  ||       || |_____ 
+|    __  ||  |_|  ||  |_|  ||       ||_____  |
+|   |  | ||       ||       || ||_|| | _____| |
+|___|  |_||_______||_______||_|   |_||_______|
+	`)
+
 	fmt.Println("Type in your name:")
 	Scanner.Scan()
 	you.name = Scanner.Text()
