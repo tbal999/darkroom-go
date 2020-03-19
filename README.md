@@ -1,5 +1,5 @@
 # darkroom-go
-A simple text based dungeon crawler game (in Golang this time)
+A simple console based dungeon crawler game in go.
 
 Makes use of structs, slices, functions, if, for & pointers.
 
